@@ -77,14 +77,13 @@ async def unsubscribe_all(interaction: discord.Interaction):
     await interaction.response.send_message(f"Unsubscribed all channels from all topics")
 
 
-tree.add_command(subscribe_group, guild=test_guild)
-tree.add_command(unsubscribe_group, guild=test_guild)
+tree.add_command(subscribe_group)
+tree.add_command(unsubscribe_group)
 
 
 @tree.command(
     name="list",
     description="List subscriptions",
-    guild=test_guild,
 )
 async def list_cmd(interaction: discord.Interaction):
     subscriptions = db.get_subscriptions_for_guild(int(interaction.guild_id))
