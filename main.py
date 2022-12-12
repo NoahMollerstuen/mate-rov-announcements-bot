@@ -149,9 +149,17 @@ async def before_fetch_loop():
     await client.wait_until_ready()
 
 
+@tree.command(name='sync', description='Owner only', guild=test_guild)
+async def sync(interaction: discord.Interaction):
+    if interaction.user.id == 306244074984177664:
+        await tree.sync()
+        print('Command tree synced.')
+    else:
+        await interaction.response.send_message('You must be the owner to use this command!')
+
+
 @client.event
 async def on_ready():
-    await tree.sync(guild=test_guild)
     fetch_loop.start()
     print("Connected")
 
