@@ -161,6 +161,7 @@ async def sync(interaction: discord.Interaction):
 @client.event
 async def on_ready():
     fetch_loop.start()
+    # await tree.sync()
     print("Connected")
 
 

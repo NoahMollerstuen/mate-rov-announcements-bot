@@ -14,13 +14,13 @@ class Page:
 
 
 PAGES = [
-    Page("explorer", "https://materovcompetition.org/explorerspecs", "the Explorer class specs"),
-    Page("pioneer", "https://materovcompetition.org/pioneerspecs", "the Pioneer class specs"),
-    Page("ranger", "https://materovcompetition.org/rangerspecs", "the Ranger class specs"),
-    Page("navigator", "https://materovcompetition.org/navigatorspecs", "the Navigator class specs"),
-    Page("scout", "https://materovcompetition.org/scoutspecs", "the Scout class specs"),
+    Page("explorer", "https://materovcompetition.org/explorer", "the Explorer class specs"),
+    Page("pioneer", "https://materovcompetition.org/pioneer", "the Pioneer class specs"),
+    Page("ranger", "https://materovcompetition.org/ranger", "the Ranger class specs"),
+    Page("navigator", "https://materovcompetition.org/navigator", "the Navigator class specs"),
+    Page("scout", "https://materovcompetition.org/scout", "the Scout class specs"),
     Page("scoring", "https://materovcompetition.org/scoring", "scoring rules"),
-    Page("worlds", "https://materovcompetition.org/worldchampinfo", "the world championships"),
+    Page("worlds", "https://materovcompetition.org/world-championship", "the world championships"),
 ]
 
 PAGES_BY_NAME = {
@@ -36,7 +36,7 @@ async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optio
         return None
 
     soup = BeautifulSoup(new_text_raw, 'html.parser')
-    new_text = soup.find(id="content").prettify()
+    new_text = soup.find(id="main-content").prettify()
 
     if not db.check_for_page(page.url):
         db.add_page(page.url, new_text)
