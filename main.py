@@ -12,7 +12,8 @@ import db
 import web
 from web import PAGES, PAGES_BY_NAME
 
-log_handler = logging.FileHandler(filename='bot.log', encoding='utf-8', mode='a')
+logging.basicConfig(filename="bot.log", encoding="utf-8", level=logging.DEBUG,
+                    format="%(asctime)s [%(levelname)s] %(message)s")
 
 
 class CustomClient(discord.Client):
@@ -23,7 +24,6 @@ class CustomClient(discord.Client):
     async def close(self) -> None:
         await db.shutdown()
         await super(CustomClient, self).close()
-
 
 
 intents = discord.Intents.default()
@@ -119,9 +119,11 @@ async def fetch(interaction: discord.Interaction):
 
 async def fetch_updates():
     print("Fetching updates")
+    logging.debug("Fetching updates")
     doc_pairs = await web.get_all_updates()
 
     for page_name, pair in doc_pairs.items():
+        logging.info(f"Page '{page_name}' has been updated")
         page = PAGES_BY_NAME[page_name]
         old_text, new_text = pair
         diff_html = ghdiff.diff(old_text, new_text)
@@ -163,6 +165,7 @@ async def on_ready():
     fetch_loop.start()
     # await tree.sync()
     print("Connected")
+    logging.info("Connected to Discord")
 
 
 with open("secrets.json") as f:
