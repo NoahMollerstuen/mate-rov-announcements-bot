@@ -15,19 +15,8 @@ from web import PAGES, PAGES_BY_NAME
 logging.basicConfig(filename="bot.log", encoding="utf-8", level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s")
 
-
-class CustomClient(discord.Client):
-    async def setup_hook(self) -> None:
-        await db.init()
-        await super(CustomClient, self).setup_hook()
-
-    async def close(self) -> None:
-        await db.shutdown()
-        await super(CustomClient, self).close()
-
-
 intents = discord.Intents.default()
-client = CustomClient(intents=intents)
+client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
 test_guild = discord.Object(id=833577630997413980)
@@ -48,8 +37,8 @@ for page in PAGES:
         guild_id = int(interaction.guild_id)
         channel_id = int(interaction.channel_id) if channel is None else int(channel.id)
 
-        if not db.check_for_subscription(channel_id, subcommand_name):
-            db.add_subscription(guild_id, channel_id, subcommand_name)
+        if not await db.check_for_subscription(channel_id, subcommand_name):
+            await db.add_subscription(guild_id, channel_id, subcommand_name)
             await interaction.response.send_message(
                 f"Subscribed <#{channel_id}> to updates about {PAGES_BY_NAME[subcommand_name].description}")
         else:
@@ -65,7 +54,7 @@ for page in PAGES:
         channel_id = int(interaction.channel_id) if channel is None else int(channel.id)
 
         if db.check_for_subscription(channel_id, subcommand_name):
-            db.remove_subscription(channel_id, subcommand_name)
+            await db.remove_subscription(channel_id, subcommand_name)
             await interaction.response.send_message(f"Unsubscribed <#{channel_id}> from {subcommand_name} updates")
         else:
             await interaction.response.send_message(f"<#{channel_id}> is not subscribed to {subcommand_name}")
@@ -73,7 +62,7 @@ for page in PAGES:
 
 @unsubscribe_group.command(name="all", description="Unsubscribe from all updates in all channels")
 async def unsubscribe_all(interaction: discord.Interaction):
-    db.remove_all_guild_subscriptions(int(interaction.guild_id))
+    await db.remove_all_guild_subscriptions(int(interaction.guild_id))
     await interaction.response.send_message(f"Unsubscribed all channels from all topics")
 
 
@@ -86,7 +75,7 @@ tree.add_command(unsubscribe_group)
     description="List subscriptions",
 )
 async def list_cmd(interaction: discord.Interaction):
-    subscriptions = db.get_subscriptions_for_guild(int(interaction.guild_id))
+    subscriptions = await db.get_subscriptions_for_guild(int(interaction.guild_id))
 
     if len(subscriptions) == 0:
         await interaction.response.send_message("This server has no subscriptions")
@@ -134,7 +123,7 @@ async def fetch_updates():
         embed.add_field(name="Check out the updated page", value=page.url)
         embed.set_image(url="attachment://diff.png")
 
-        for subscription in db.get_subscriptions_for_topic(page_name):
+        for subscription in await db.get_subscriptions_for_topic(page_name):
             await client.get_channel(subscription["channel_id"]).send(
                 embed=embed,
                 file=discord.File(io.BytesIO(img), filename="diff.png")

@@ -1,5 +1,4 @@
 import typing as t
-import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
 
@@ -38,24 +37,25 @@ async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optio
     soup = BeautifulSoup(new_text_raw, 'html.parser')
     new_text = soup.find(id="main-content").prettify()
 
-    if not db.check_for_page(page.url):
-        db.add_page(page.url, new_text)
+    if not await db.check_for_page(page.url):
+        await db.add_page(page.url, new_text)
         return None
 
-    old_text = db.get_page_by_url(page.url)["text"]
+    old_text = (await db.get_page_by_url(page.url))["text"]
 
     if old_text == new_text:
         return None
 
-    db.update_page(page.url, new_text)
+    await db.update_page(page.url, new_text)
 
     return old_text, new_text
 
 
 async def get_all_updates():
-
     async with aiohttp.ClientSession() as session:
-        results = await asyncio.gather(*(get_page_update(page, session) for page in PAGES))
+        results = []
+        for page in PAGES:
+            results.append(await get_page_update(page, session))
 
     diffs = {
         PAGES[i].name: results[i] for i in range(len(PAGES)) if results[i] is not None
