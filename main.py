@@ -53,7 +53,7 @@ for page in PAGES:
         subcommand_name = interaction.command.name
         channel_id = int(interaction.channel_id) if channel is None else int(channel.id)
 
-        if db.check_for_subscription(channel_id, subcommand_name):
+        if await db.check_for_subscription(channel_id, subcommand_name):
             await db.remove_subscription(channel_id, subcommand_name)
             await interaction.response.send_message(f"Unsubscribed <#{channel_id}> from {subcommand_name} updates")
         else:
@@ -146,7 +146,7 @@ async def sync(interaction: discord.Interaction):
         await tree.sync()
         print('Command tree synced.')
     else:
-        await interaction.response.send_message('You must be the owner to use this command!')
+        await interaction.response.send_message('You must be the developer to use this command!')
 
 
 @client.event
