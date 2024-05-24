@@ -32,7 +32,7 @@ class Page:
     name: str
     url: str
     description: str
-    parse_options: ParseOptions = ParseOptions(MATE_FILTER_ID, ParseType.FULL_HTML)
+    parse_options: ParseOptions = dataclasses.field(default_factory=lambda: ParseOptions(MATE_FILTER_ID, ParseType.FULL_HTML))
 
 
 PAGES = [
