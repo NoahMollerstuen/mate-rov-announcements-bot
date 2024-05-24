@@ -124,10 +124,13 @@ async def fetch_updates():
         embed.set_image(url="attachment://diff.png")
 
         for subscription in await db.get_subscriptions_for_topic(page_name):
-            await client.get_channel(subscription["channel_id"]).send(
-                embed=embed,
-                file=discord.File(io.BytesIO(img), filename="diff.png")
-            )
+            try:
+                await client.get_channel(subscription["channel_id"]).send(
+                    embed=embed,
+                    file=discord.File(io.BytesIO(img), filename="diff.png")
+                )
+            except (discord.HTTPException, discord.Forbidden, ValueError) as e:
+                logging.error(f"Failed to send message to {subscription['channel_id']}: {type(e)}")
 
 
 @tasks.loop(seconds=300)
