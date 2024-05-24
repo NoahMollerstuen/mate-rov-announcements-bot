@@ -14,6 +14,7 @@ from web import PAGES, PAGES_BY_NAME
 
 logging.basicConfig(filename="bot.log", encoding="utf-8", level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s")
+logging.getLogger().addHandler(logging.StreamHandler())
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -107,7 +108,6 @@ async def fetch(interaction: discord.Interaction):
 
 
 async def fetch_updates():
-    print("Fetching updates")
     logging.debug("Fetching updates")
     doc_pairs = await web.get_all_updates()
 
@@ -147,7 +147,7 @@ async def before_fetch_loop():
 async def sync(interaction: discord.Interaction):
     if interaction.user.id == 306244074984177664:
         await tree.sync()
-        print('Command tree synced.')
+        logging.info('Command tree synced.')
     else:
         await interaction.response.send_message('You must be the developer to use this command!')
 
@@ -156,7 +156,6 @@ async def sync(interaction: discord.Interaction):
 async def on_ready():
     fetch_loop.start()
     # await tree.sync()
-    print("Connected")
     logging.info("Connected to Discord")
 
 
