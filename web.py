@@ -73,9 +73,9 @@ async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optio
     if old_text == new_text:
         return None
 
-    await db.update_page(page.url, new_text)
+    # await db.update_page(page.url, new_text)
 
-    return old_text, new_text
+    return old_text, new_text, soup
 
 
 async def get_all_updates():

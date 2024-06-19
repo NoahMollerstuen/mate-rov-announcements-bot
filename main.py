@@ -7,7 +7,7 @@ import json
 import ghdiff
 import imgkit
 import logging
-
+import difflib
 import db
 import web
 from web import PAGES, PAGES_BY_NAME
@@ -107,30 +107,72 @@ async def fetch(interaction: discord.Interaction):
     await fetch_updates()
 
 
-async def fetch_updates():
-    logging.debug("Fetching updates")
-    doc_pairs = await web.get_all_updates()
-
-    for page_name, pair in doc_pairs.items():
-        logging.info(f"Page '{page_name}' has been updated")
-        page = PAGES_BY_NAME[page_name]
-        old_text, new_text = pair
-        diff_html = ghdiff.diff(old_text, new_text)
-
-        img = imgkit.from_string(diff_html, False)
-
-        embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
-        embed.add_field(name="Check out the updated page", value=page.url)
+async def publish_embed(page_name: str, embed: discord.Embed, img=None):
+    if img is not None:
         embed.set_image(url="attachment://diff.png")
 
-        for subscription in await db.get_subscriptions_for_topic(page_name):
-            try:
+    for subscription in await db.get_subscriptions_for_topic(page_name):
+        try:
+            if img is not None:
                 await client.get_channel(subscription["channel_id"]).send(
                     embed=embed,
                     file=discord.File(io.BytesIO(img), filename="diff.png")
                 )
-            except (discord.HTTPException, discord.Forbidden, ValueError) as e:
-                logging.error(f"Failed to send message to {subscription['channel_id']}: {type(e)}")
+            else:
+                await client.get_channel(subscription["channel_id"]).send(
+                    embed=embed,
+                )
+        except (discord.HTTPException, discord.Forbidden, ValueError) as e:
+            logging.error(f"Failed to send message to {subscription['channel_id']}: {type(e)}")
+
+
+async def fetch_updates():
+    logging.debug("Fetching updates")
+    doc_pairs = await web.get_all_updates()
+
+    for page_name, result in doc_pairs.items():
+        logging.info(f"Page '{page_name}' has been updated")
+        page = PAGES_BY_NAME[page_name]
+        old_text, new_text, new_page_soup = result
+
+        # If new links have been added, link them directly in the notification
+        links = new_page_soup.find_all("a")
+        new_links = []
+        for link in links:
+            href = link.get("href")
+            if href is not None and "http" in href and href not in old_text and link.get_text():
+                new_links.append(link)
+
+        if len(new_links) > 0:
+            embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
+            embed.add_field(name="Check out the updated page", value=page.url, inline=False)
+            field_text = ""
+            for link in new_links:
+                field_text += f"[{link.get_text()}]({link.get('href')})\n"
+            embed.add_field(name="New links have been added", value=field_text, inline=False)
+
+            await publish_embed(page_name, embed)
+            return
+
+        diff = difflib.ndiff(old_text.splitlines(), new_text.splitlines())
+
+        change_count = 0
+        for line in diff:
+            if line.startswith("+") or line.startswith("-"):
+                change_count += 1
+
+        if change_count < 10:
+            # Otherwise, if the diff is short enough, include an image of the diff
+            diff_html = ghdiff.diff(old_text, new_text)
+
+            # imgkit.config(wkhtmltoimage='wkhtmltoimage.exe')
+            img = imgkit.from_string(diff_html, False)
+
+            embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
+            embed.add_field(name="Check out the updated page", value=page.url)
+            await publish_embed(page_name, embed, img)
+
+        # Otherwise, simply provide the full diff as an attachment
 
 
 @tasks.loop(seconds=300)
