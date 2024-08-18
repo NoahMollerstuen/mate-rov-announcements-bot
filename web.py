@@ -1,6 +1,8 @@
 import dataclasses
 import enum
 import typing as t
+from typing import Dict, Tuple
+
 import aiohttp
 from bs4 import BeautifulSoup
 
@@ -52,7 +54,7 @@ PAGES_BY_NAME = {
 }
 
 
-async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optional[t.Tuple[str, str]]:
+async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optional[t.Tuple[str, str, BeautifulSoup]]:
     try:
         async with session.get(page.url) as resp:
             new_text_raw = await resp.text()
@@ -78,7 +80,7 @@ async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optio
     return old_text, new_text, soup
 
 
-async def get_all_updates():
+async def get_all_updates() -> dict[str, tuple[str, str, BeautifulSoup]]:
     async with aiohttp.ClientSession() as session:
         results = []
         for page in PAGES:
