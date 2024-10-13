@@ -181,7 +181,10 @@ async def fetch_updates():
 
 @tasks.loop(seconds=300)
 async def fetch_loop():
-    await fetch_updates()
+    try:
+        await fetch_updates()
+    except Exception as e:
+        logging.exception(e)
 
 
 @fetch_loop.before_loop
