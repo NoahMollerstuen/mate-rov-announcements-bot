@@ -145,11 +145,11 @@ async def fetch_updates():
 
         if len(new_links) > 0:
             embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
-            embed.add_field(name="Check out the updated page", value=page.url, inline=False)
             field_text = ""
             for link in new_links:
                 field_text += f"[{link.get_text()}]({link.get('href')})\n"
             embed.add_field(name="New links have been added", value=field_text, inline=False)
+            embed.add_field(name="Check out the updated page", value=page.url, inline=False)
 
             await publish_embed(page_name, embed)
             return
@@ -175,7 +175,6 @@ async def fetch_updates():
         # Otherwise, simply provide the full diff as an attachment
         embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
         embed.add_field(name="Many lines were changed, but no links were added", value=page.url)
-        embed.add_field(name="Check out the updated page", value=page.url)
         await publish_embed(page_name, embed)
 
 
