@@ -1,10 +1,10 @@
 import dataclasses
 import enum
 import typing as t
-from typing import Dict, Tuple
-
 import aiohttp
 from bs4 import BeautifulSoup
+import logging
+import traceback
 
 import db
 
@@ -64,6 +64,7 @@ async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optio
         async with session.get(page.url, headers=REQUEST_HEADERS) as resp:
             new_text_raw = await resp.text()
     except aiohttp.ClientConnectorError:
+        logging.warning(f"Failed to fetch page {page.name} at {page.url}")
         return None
 
     soup = BeautifulSoup(new_text_raw, 'html.parser')
@@ -89,7 +90,11 @@ async def get_all_updates() -> dict[str, tuple[str, str, BeautifulSoup]]:
     async with aiohttp.ClientSession() as session:
         results = []
         for page in PAGES:
-            results.append(await get_page_update(page, session))
+            try:
+                results.append(await get_page_update(page, session))
+            except Exception as e:
+                results.append(None)
+                logging.error(f"Error fetching page {page.name} at {page.url}:\n\n" + traceback.format_exc())
 
     diffs = {
         PAGES[i].name: results[i] for i in range(len(PAGES)) if results[i] is not None

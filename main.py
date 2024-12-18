@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord import app_commands
 from discord.ext import tasks
@@ -7,14 +8,41 @@ import json
 import ghdiff
 import imgkit
 import logging
+import traceback
 import difflib
+
 import db
 import web
 from web import PAGES, PAGES_BY_NAME
 
+
+ADMIN_GUILD_ID = 833577630997413980
+LOGGING_CHANNEL_ID = 967584099952918618
+
+
 logging.basicConfig(filename="bot.log", encoding="utf-8", level=logging.DEBUG,
                     format="%(asctime)s [%(levelname)s] %(message)s")
 logging.getLogger().addHandler(logging.StreamHandler())
+
+
+class DiscordLoggingHandler(logging.Handler):
+
+    def __init__(self, channel: discord.TextChannel) -> None:
+        self.channel: discord.TextChannel = channel
+        logging.Handler.__init__(self=self)
+
+    def emit(self, record) -> None:
+        asyncio.create_task(self.send_log_message(record))
+
+    async def send_log_message(self, record) -> None:
+        embed = discord.Embed(color=0xf7d152 if record.levelno == logging.WARNING else 0xfa5a57)
+        embed.add_field(
+            name=f"{record.levelname} in MATE ROV Announcements Bot",
+            value=record.getMessage(),
+        )
+
+        await self.channel.send(embed=embed)
+
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -183,7 +211,7 @@ async def fetch_loop():
     try:
         await fetch_updates()
     except Exception as e:
-        logging.exception(e)
+        logging.exception("Error fetching updates:\n\n" + traceback.format_exc())
 
 
 @fetch_loop.before_loop
@@ -202,6 +230,11 @@ async def sync(interaction: discord.Interaction):
 
 @client.event
 async def on_ready():
+    # Setup discord log messages
+    discord_handler = DiscordLoggingHandler(client.get_channel(LOGGING_CHANNEL_ID))
+    discord_handler.setLevel(logging.WARNING)
+    logging.getLogger().addHandler(discord_handler)
+
     fetch_loop.start()
     # await tree.sync()
     logging.info("Connected to Discord")
