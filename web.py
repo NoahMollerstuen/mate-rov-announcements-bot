@@ -8,8 +8,11 @@ from bs4 import BeautifulSoup
 
 import db
 
-
 MATE_FILTER_ID = "main-content"
+
+REQUEST_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+}
 
 
 class ParseType(enum.Enum):
@@ -34,7 +37,8 @@ class Page:
     name: str
     url: str
     description: str
-    parse_options: ParseOptions = dataclasses.field(default_factory=lambda: ParseOptions(MATE_FILTER_ID, ParseType.FULL_HTML))
+    parse_options: ParseOptions = dataclasses.field(
+        default_factory=lambda: ParseOptions(MATE_FILTER_ID, ParseType.FULL_HTML))
 
 
 PAGES = [
@@ -45,7 +49,8 @@ PAGES = [
     Page("scout", "https://materovcompetition.org/scout", "the Scout class specs"),
     Page("scoring", "https://materovcompetition.org/scoring", "scoring rules"),
     Page("worlds", "https://materovcompetition.org/world-championship", "the world championships"),
-    Page("rulings", "https://docs.google.com/document/d/e/2PACX-1vS-i5t8yrwIYMjHzpS6sSYyuG8_quCGhyDMnxPqG2eDmI6QacK08fTVS2_VQF-d1vfjA7ydJgbu4itI/pub",
+    Page("rulings",
+         "https://docs.google.com/document/d/e/2PACX-1vS-i5t8yrwIYMjHzpS6sSYyuG8_quCGhyDMnxPqG2eDmI6QacK08fTVS2_VQF-d1vfjA7ydJgbu4itI/pub",
          "official rulings", ParseOptions("contents", ParseType.TEXT_ONLY)),
 ]
 
@@ -56,7 +61,7 @@ PAGES_BY_NAME = {
 
 async def get_page_update(page: Page, session: aiohttp.ClientSession) -> t.Optional[t.Tuple[str, str, BeautifulSoup]]:
     try:
-        async with session.get(page.url) as resp:
+        async with session.get(page.url, headers=REQUEST_HEADERS) as resp:
             new_text_raw = await resp.text()
     except aiohttp.ClientConnectorError:
         return None
