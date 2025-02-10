@@ -199,6 +199,7 @@ async def fetch_updates():
             embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
             embed.add_field(name="Check out the updated page", value=page.url)
             await publish_embed(page_name, embed, img)
+            return
 
         # Otherwise, simply provide the full diff as an attachment
         embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
