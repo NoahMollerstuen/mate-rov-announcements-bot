@@ -175,7 +175,7 @@ async def fetch_updates():
             embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
             field_text = ""
             for link in new_links:
-                field_text += f"[{link.get_text()}]({link.get('href')})\n"
+                field_text += f"[{link.get_text().strip()}]({link.get('href')})\n"
             embed.add_field(name="New links have been added", value=field_text, inline=False)
             embed.add_field(name="Check out the updated page", value=page.url, inline=False)
 
