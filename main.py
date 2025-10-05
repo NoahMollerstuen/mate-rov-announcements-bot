@@ -184,21 +184,24 @@ async def fetch_updates():
 
         diff = difflib.ndiff(old_text.splitlines(), new_text.splitlines())
 
+        # Filter added against "data-hsv-embed-id" lines
         change_count = 0
         for line in diff:
-            if line.startswith("+") or line.startswith("-"):
+            if line.startswith("+") or line.startswith("-") and not line.contains("data-hsv-embed-id="):
                 change_count += 1
 
         if change_count < 10:
-            # Otherwise, if the diff is short enough, include an image of the diff
-            diff_html = ghdiff.diff(old_text, new_text)
+            #Extra condition to ensure no embed is sent if the amount of meaningful changes is 0
+            if change_count > 0:
+                # Otherwise, if the diff is short enough, include an image of the diff
+                diff_html = ghdiff.diff(old_text, new_text)
 
-            # imgkit.config(wkhtmltoimage='wkhtmltoimage.exe')
-            img = imgkit.from_string(diff_html, False)
+                # imgkit.config(wkhtmltoimage='wkhtmltoimage.exe')
+                img = imgkit.from_string(diff_html, False)
 
-            embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
-            embed.add_field(name="Check out the updated page", value=page.url)
-            await publish_embed(page_name, embed, img)
+                embed = discord.Embed(title=f"The {page_name} page on the MATE website has been updated!")
+                embed.add_field(name="Check out the updated page", value=page.url)
+                await publish_embed(page_name, embed, img)
             return
 
         # Otherwise, simply provide the full diff as an attachment
