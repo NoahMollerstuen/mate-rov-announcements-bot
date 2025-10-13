@@ -146,7 +146,7 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
             if channel is None:
                 # Channel has been deleted?
                 logging.error(f"Could not find channel {subscription['channel_id']}, removing subscriptions")
-                db.remove_all_channel_subscriptions(subscription["channel_id"])
+                await db.remove_all_channel_subscriptions(subscription["channel_id"])
                 
             if img is not None:
                 await channel.send(
@@ -159,8 +159,7 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
                 )
         except discord.Forbidden as e:
             logging.error(f"Forbidden from accessing channel {subscription['channel_id']}, removing subscriptions")
-            db.remove_all_channel_subscriptions(subscription["channel_id"])
-            logging.errp
+            await db.remove_all_channel_subscriptions(subscription["channel_id"])
         except (discord.HTTPException, ValueError) as e:
             logging.error(f"Failed to send message to {subscription['channel_id']}: {type(e)}")
 
