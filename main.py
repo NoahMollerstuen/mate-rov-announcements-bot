@@ -147,6 +147,7 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
                 # Channel has been deleted?
                 logging.error(f"Could not find channel {subscription['channel_id']}, removing subscriptions")
                 await db.remove_all_channel_subscriptions(subscription["channel_id"])
+                return
                 
             if img is not None:
                 await channel.send(
@@ -154,7 +155,7 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
                     file=discord.File(io.BytesIO(img), filename="diff.png")
                 )
             else:
-                await client.get_channel(subscription["channel_id"]).send(
+                await channel.send(
                     embed=embed,
                 )
         except discord.Forbidden as e:
