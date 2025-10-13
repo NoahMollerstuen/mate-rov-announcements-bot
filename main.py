@@ -141,8 +141,15 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
 
     for subscription in await db.get_subscriptions_for_topic(page_name):
         try:
+            channel = client.get_channel(subscription["channel_id"])
+
+            if channel is None:
+                # Channel has been deleted?
+                logging.error(f"Could not find channel {subscription['channel_id']}, removing subscriptions")
+                db.remove_all_channel_subscriptions(subscription["channel_id"])
+                
             if img is not None:
-                await client.get_channel(subscription["channel_id"]).send(
+                await channel.send(
                     embed=embed,
                     file=discord.File(io.BytesIO(img), filename="diff.png")
                 )
@@ -150,7 +157,11 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
                 await client.get_channel(subscription["channel_id"]).send(
                     embed=embed,
                 )
-        except (discord.HTTPException, discord.Forbidden, ValueError) as e:
+        except discord.Forbidden as e:
+            logging.error(f"Forbidden from accessing channel {subscription['channel_id']}, removing subscriptions")
+            db.remove_all_channel_subscriptions(subscription["channel_id"])
+            logging.errp
+        except (discord.HTTPException, ValueError) as e:
             logging.error(f"Failed to send message to {subscription['channel_id']}: {type(e)}")
 
 

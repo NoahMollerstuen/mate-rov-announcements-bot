@@ -30,6 +30,11 @@ async def remove_all_guild_subscriptions(guild_id: int):
         get_subscriptions(db).remove(query.guild_id == guild_id)
 
 
+async def remove_all_channel_subscriptions(channel_id: int):
+    async with AIOTinyDB(DB_PATH) as db:
+        get_subscriptions(db).remove(query.channel_id == channel_id)
+
+
 async def get_subscriptions_for_topic(topic: str):
     async with AIOTinyDB(DB_PATH) as db:
         return get_subscriptions(db).search(query.topic == topic)
