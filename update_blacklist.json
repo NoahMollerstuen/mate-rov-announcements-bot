@@ -1,0 +1,6 @@
+[
+    {
+        "type": "substring",
+        "filter_string": "data-hsv-embed-id"
+    }
+]

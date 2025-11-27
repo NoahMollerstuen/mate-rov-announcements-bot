@@ -14,6 +14,7 @@ import difflib
 import db
 import web
 from web import PAGES, PAGES_BY_NAME
+from filter import UpdateFilter
 
 
 ADMIN_GUILD_ID = 833577630997413980
@@ -44,11 +45,13 @@ class DiscordLoggingHandler(logging.Handler):
         await self.channel.send(embed=embed)
 
 
+update_filter = UpdateFilter.from_file("update_blacklist.json")
+
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-test_guild = discord.Object(id=833577630997413980)
+test_guild = discord.Object(id=ADMIN_GUILD_ID)
 
 subscribe_group = app_commands.Group(name="subscribe", description="Subscribe to updates to the MATE website")
 unsubscribe_group = app_commands.Group(name="unsubscribe", description="Unsubscribe from updates")
@@ -170,6 +173,17 @@ async def fetch_updates():
     doc_pairs = await web.get_all_updates()
 
     for page_name, result in doc_pairs.items():
+        diff = difflib.ndiff(old_text.splitlines(), new_text.splitlines())
+
+        change_count = 0
+        for line in diff:
+            if line.startswith("+") or line.startswith("-") and not update_filter.apply_filter(line):
+                change_count += 1
+
+        if change_count == 0:
+            # All changed lines are rejected bt the update filter
+            continue
+
         logging.info(f"Page '{page_name}' has been updated")
         page = PAGES_BY_NAME[page_name]
         old_text, new_text, new_page_soup = result
@@ -193,12 +207,6 @@ async def fetch_updates():
             await publish_embed(page_name, embed)
             return
 
-        diff = difflib.ndiff(old_text.splitlines(), new_text.splitlines())
-
-        change_count = 0
-        for line in diff:
-            if line.startswith("+") or line.startswith("-"):
-                change_count += 1
 
         if change_count < 10:
             # Otherwise, if the diff is short enough, include an image of the diff
