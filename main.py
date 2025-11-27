@@ -173,20 +173,22 @@ async def fetch_updates():
     doc_pairs = await web.get_all_updates()
 
     for page_name, result in doc_pairs.items():
+        old_text, new_text, new_page_soup = result
         diff = difflib.ndiff(old_text.splitlines(), new_text.splitlines())
 
         change_count = 0
         for line in diff:
-            if line.startswith("+") or line.startswith("-") and not update_filter.apply_filter(line):
-                change_count += 1
+            if line.startswith("+") or line.startswith("-"):
+                # Line changed
+                if not update_filter.apply_filter(line):
+                    change_count += 1
 
         if change_count == 0:
-            # All changed lines are rejected bt the update filter
+            # All changed lines are rejected by the update filter
             continue
 
         logging.info(f"Page '{page_name}' has been updated")
         page = PAGES_BY_NAME[page_name]
-        old_text, new_text, new_page_soup = result
 
         # If new links have been added, link them directly in the notification
         links = new_page_soup.find_all("a")
