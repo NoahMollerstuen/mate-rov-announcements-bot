@@ -2,5 +2,9 @@
     {
         "type": "substring",
         "filter_string": "data-hsv-embed-id"
+    },
+    {
+        "type": "substring",
+        "filter_string": "https://campscui.active.com/orgs/MATEInspirationforInnovation0?season=3702340"
     }
 ]
