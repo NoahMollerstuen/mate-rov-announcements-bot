@@ -36,13 +36,16 @@ class DiscordLoggingHandler(logging.Handler):
         asyncio.create_task(self.send_log_message(record))
 
     async def send_log_message(self, record) -> None:
-        embed = discord.Embed(color=0xf7d152 if record.levelno == logging.WARNING else 0xfa5a57)
-        embed.add_field(
-            name=f"{record.levelname} in MATE ROV Announcements Bot",
-            value=record.getMessage(),
-        )
+        try:
+            embed = discord.Embed(color=0xf7d152 if record.levelno == logging.WARNING else 0xfa5a57)
+            embed.add_field(
+                name=f"{record.levelname} in MATE ROV Announcements Bot",
+                value=record.getMessage(),
+            )
 
-        await self.channel.send(embed=embed)
+            await self.channel.send(embed=embed)
+        except Exception as e:
+            pass  # Discord error reporting is best effort
 
 
 update_filter = UpdateFilter.from_file("update_blacklist.json")
