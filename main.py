@@ -147,6 +147,7 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
 
     for subscription in await db.get_subscriptions_for_topic(page_name):
         try:
+            await asyncio.sleep(1.0)  # Avoid rate limits
             channel = client.get_channel(subscription["channel_id"])
 
             if channel is None:
