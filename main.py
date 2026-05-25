@@ -169,7 +169,7 @@ async def publish_embed(page_name: str, embed: discord.Embed, img=None):
             logging.error(f"Forbidden from accessing channel {subscription['channel_id']}, removing subscriptions")
             await db.remove_all_channel_subscriptions(subscription["channel_id"])
         except (discord.HTTPException, ValueError) as e:
-            logging.error(f"Failed to send message to {subscription['channel_id']}: {type(e)}")
+            logging.error(f"Failed to send message to {subscription['channel_id']}: {e}")
 
 
 async def fetch_updates():
