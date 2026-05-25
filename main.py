@@ -200,7 +200,7 @@ async def fetch_updates():
         new_links = []
         for link in links:
             href = link.get("href")
-            if href is not None and "http" in href and href not in old_text and html.encode(href) not in old_text and link.get_text():
+            if href is not None and "http" in href and href not in old_text and html.escape(href) not in old_text and link.get_text():
                 new_links.append(link)
 
         if len(new_links) > 0:
